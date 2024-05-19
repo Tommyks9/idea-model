@@ -1,0 +1,497 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
+  output        = "../../idea-model"
+}
+
+datasource db {
+  provider     = "mysql"
+  url          = env("DATABASE_URL")
+  relationMode = "prisma"
+}
+
+model province {
+  ID        String     @id @unique @default(uuid()) @db.VarChar(516)
+  Name      String     @unique @db.VarChar(516)
+  Status    String?    @db.VarChar(516) //enum provinceStatus
+  IsActive  Boolean    @default(true)
+  CreatedAt DateTime   @default(now())
+  UpdatedAt DateTime   @updatedAt()
+  District  district[]
+  Village   village[]
+  Address   address[]
+}
+
+model district {
+  ID         String    @id @unique @default(uuid()) @db.VarChar(516)
+  Name       String    @db.VarChar(516)
+  Province   province? @relation(fields: [ProvinceID], references: [ID])
+  ProvinceID String?   @db.VarChar(516)
+  Status     String?   @db.VarChar(516) //enum addressStatus
+  IsActive   Boolean   @default(true)
+  CreatedAt  DateTime  @default(now())
+  UpdatedAt  DateTime? @updatedAt()
+  Address    address[]
+  Village    village[]
+
+  @@index([ProvinceID])
+}
+
+model village {
+  ID         String    @id @unique @default(uuid()) @db.VarChar(516)
+  Name       String    @db.VarChar(516)
+  Province   province? @relation(fields: [ProvinceID], references: [ID])
+  ProvinceID String?   @db.VarChar(516)
+  District   district? @relation(fields: [DistrictID], references: [ID])
+  DistrictID String?   @db.VarChar(516)
+  Status     String?   @db.VarChar(516) //enum addressStatus
+  IsActive   Boolean   @default(true)
+  CreatedAt  DateTime  @default(now())
+  UpdatedAt  DateTime? @updatedAt()
+
+  @@index([ProvinceID])
+  @@index([DistrictID])
+}
+
+model address {
+  ID         String    @id @unique @default(uuid()) @db.VarChar(516)
+  Address    String
+  Province   province? @relation(fields: [ProvinceID], references: [ID])
+  ProvinceID String?   @db.VarChar(516)
+  District   district? @relation(fields: [DistrictID], references: [ID])
+  DistrictID String?   @db.VarChar(516)
+  Profile    profile?  @relation(fields: [ProfileID], references: [ID])
+  ProfileID  String?
+  Branches   branches? @relation(fields: [BranchesID], references: [ID])
+  BranchesID String?   @unique @db.VarChar(516)
+  IsDefault  Boolean?
+  Status     String?   @db.VarChar(516) //enum addressStatus
+  IsActive   Boolean   @default(true)
+  CreatedAt  DateTime  @default(now())
+  UpdatedAt  DateTime? @updatedAt()
+
+  @@index([ProvinceID])
+  @@index([DistrictID])
+  @@index([BranchesID])
+  @@index([ProfileID])
+}
+
+model branches {
+  ID               String             @id @unique @default(uuid()) @db.VarChar(516)
+  CompanyId        String             @default(uuid()) @db.VarChar(516)
+  Name             String             @unique @db.VarChar(516)
+  Address1         String?            @db.Text
+  Address2         String?            @db.Text
+  Address3         String?            @db.Text
+  Status           String?            @db.VarChar(516) //enum branchesStatus
+  Address          address?
+  Lat              Float?             @db.Double()
+  Long             Float?             @db.Double()
+  Zone             String?            @db.Text
+  IsMain           Boolean?
+  UploadURL        String?            @db.Text
+  User             users?
+  IsActive         Boolean            @default(true)
+  CreatedAt        DateTime           @default(now())
+  UpdatedAt        DateTime?          @updatedAt()
+  BranchesKey      branchesKey[]
+  BranchesSettings branchesSettings[]
+  Otp              otp[]
+  Notifications    notifications[]
+  OrderCategory    orderCategory[]
+  Order            order[]
+  Tracking         orderTacking[]
+}
+
+model branchesKey {
+  ID         String    @id @unique @default(uuid()) @db.VarChar(516)
+  Key        String    @unique @db.VarChar(516)
+  Secret     String    @db.VarChar(516)
+  Remask     String?   @db.Text
+  Branches   branches? @relation(fields: [BranchesID], references: [ID])
+  BranchesID String?   @db.VarChar(516)
+  Status     String    @db.VarChar(516) //enum branchesKeyStatus
+  IsActive   Boolean   @default(true)
+  CreatedAt  DateTime  @default(now())
+  UpdatedAt  DateTime? @updatedAt()
+
+  @@index([BranchesID])
+}
+
+model branchesSettings {
+  ID         String    @id @unique @default(uuid()) @db.VarChar(516)
+  Titel      String    @db.VarChar(516)
+  Setting    String    @db.VarChar(516)
+  Remask     String?   @db.Text
+  Branches   branches? @relation(fields: [BranchesID], references: [ID])
+  BranchesID String?   @db.VarChar(516)
+  Status     String    @db.VarChar(516) //enum branchesSettingsStatus
+  IsActive   Boolean   @default(true)
+  CreatedAt  DateTime  @default(now())
+  UpdatedAt  DateTime? @updatedAt()
+
+  @@index([BranchesID])
+}
+
+model wallet {
+  ID          String        @id @unique @default(uuid()) @db.VarChar(516)
+  Balance     Float?        @db.Double()
+  Title       String?       @db.Text
+  Description String?       @db.Text
+  IsReal      Boolean?      @default(true)
+  User        users?        @relation("UserWallet", fields: [UserID], references: [ID])
+  UserID      String?       @db.VarChar(516)
+  Status      String?       @db.VarChar(516) //enum walletStatus
+  Remask      String?       @db.Text
+  IsActive    Boolean       @default(true)
+  CreatedAt   DateTime      @default(now())
+  UpdatedAt   DateTime?     @updatedAt()
+  Receive     transaction[] @relation("RecipientTransaction")
+  Payment     transaction[] @relation("PaidByTransaction")
+
+  @@index([UserID])
+}
+
+model transaction {
+  ID             String        @id @unique @default(uuid()) @db.VarChar(516)
+  Type           String?       @db.VarChar(516) //enum transactionType
+  Info           String?       @db.VarChar(516) //enum transactionInfo
+  Status         String?       @db.VarChar(516) //enum transactionStatus
+  Result         Float?        @db.Double()
+  Balance        Float?        @db.Double()
+  IsPayment      Boolean?      @default(false)
+  IsReceived     Boolean?      @default(false)
+  OrderPayment   orderPayment? @relation(fields: [OrderPaymentID], references: [ID])
+  OrderPaymentID String?       @unique @db.VarChar(516)
+  PaidBy         wallet?       @relation("PaidByTransaction", fields: [PaidByID], references: [ID])
+  PaidByID       String?       @db.VarChar(516)
+  PaidTo         wallet?       @relation("RecipientTransaction", fields: [PaidToID], references: [ID])
+  PaidToID       String?       @db.VarChar(516)
+  IsActive       Boolean       @default(true)
+  CreatedAt      DateTime      @default(now())
+  UpdatedAt      DateTime?     @updatedAt()
+
+  @@index([OrderPaymentID])
+  @@index([PaidByID])
+  @@index([PaidToID])
+}
+
+model users {
+  ID               String            @id @unique @default(uuid()) @db.VarChar(516)
+  UserName         String            @unique @db.VarChar(516) // Phone or Email...
+  Password         String            @db.VarChar(516)
+  URL              String?           @db.Text
+  PhoneNumber      String            @db.VarChar(40)
+  Email            String?           @db.VarChar(516)
+  Pin              String?           @db.VarChar(516)
+  IsRemember       Boolean?
+  IsPin            Boolean?
+  IsBiometric      Boolean?
+  Status           String?           @db.VarChar(516) //enum usersStatus
+  Remask           String?           @db.Text
+  LastActive       DateTime?
+  Branches         branches?         @relation(fields: [BranchesID], references: [ID])
+  BranchesID       String?           @unique @db.VarChar(516)
+  IsActive         Boolean           @default(true)
+  CreatedAt        DateTime          @default(now())
+  UpdatedAt        DateTime?         @updatedAt()
+  Wallet           wallet[]          @relation("UserWallet")
+  RecipientPayment orderPayment[]    @relation("RecipientPayment")
+  AdminProfile     profile[]         @relation("AdminID")
+  UserProfile      profile?          @relation("UserID")
+  OTP              otp[]
+  Roles            usersRoles[]
+  Forgot           forgotPassword[]
+  Notifications    notifications[]
+  Activities       usersActivities[]
+  Order            order[]
+  SenderOrder      orderPersonal[]   @relation("Sender")
+  RecipientOrder   orderPersonal[]   @relation("Recipient")
+}
+
+model profile {
+  ID         String    @id @unique @default(uuid()) @db.VarChar(516)
+  Gender     String?   @db.VarChar(516) //enum gender?
+  Name       String    @db.VarChar(516)
+  SurName    String    @db.VarChar(516)
+  ProfileURL String?   @db.Text
+  User       users?    @relation("UserID", fields: [UserID], references: [ID])
+  UserID     String?   @unique @db.VarChar(516)
+  Admin      users?    @relation("AdminID", fields: [AdminID], references: [ID])
+  AdminID    String?   @db.VarChar(516)
+  AdminPin   String?   @db.VarChar(516)
+  Remask     String?   @db.Text
+  Status     String?   @db.VarChar(516) //enum profileStatus @default(Active)
+  IsActive   Boolean   @default(true)
+  CreatedAt  DateTime  @default(now())
+  UpdatedAt  DateTime? @updatedAt()
+  Address    address[]
+
+  @@index([AdminID])
+  @@index([UserID])
+}
+
+model otp {
+  ID             String    @id @unique @default(uuid()) @db.VarChar(516)
+  OTP            String?   @db.VarChar(6)
+  IsVerify       Boolean   @default(false)
+  UserName       String    @db.VarChar(516)
+  Type           String?   @db.VarChar(516) //enum otpType
+  Remask         String?   @db.Text
+  Users          users?    @relation(fields: [UsersID], references: [ID])
+  UsersID        String?   @db.VarChar(516)
+  Branches       branches? @relation(fields: [BranchesID], references: [ID])
+  BranchesID     String?   @db.VarChar(516)
+  SmsGatewayUUID String?   @db.VarChar(516)
+  Status         String?   @db.VarChar(516) //enum otpStatus
+  IsActive       Boolean   @default(true)
+  CreatedAt      DateTime  @default(now())
+  UpdatedAt      DateTime? @updatedAt()
+
+  @@index([UsersID])
+  @@index([BranchesID])
+}
+
+model notifications {
+  ID             String    @id @unique @default(uuid()) @db.VarChar(516)
+  Titel          String?   @db.VarChar(516)
+  Details        String?   @db.Text
+  Type           String?   @db.VarChar(516) //enum notificationsType?
+  Provider       String?   @db.VarChar(516) //enum providerNotification?
+  Remask         String?   @db.Text
+  Users          users?    @relation(fields: [UsersID], references: [ID])
+  UsersID        String?   @db.VarChar(516)
+  Branches       branches? @relation(fields: [BranchesID], references: [ID])
+  BranchesID     String?   @db.VarChar(516)
+  SmsGatewayUUID String?   @db.VarChar(516)
+  Status         String?   @db.VarChar(516) //enum notificationsStatus
+  IsActive       Boolean   @default(false)
+  CreatedAt      DateTime  @default(now())
+  UpdatedAt      DateTime? @updatedAt()
+
+  @@index([UsersID])
+  @@index([BranchesID])
+}
+
+model forgotPassword {
+  ID          String    @id @unique @default(uuid()) @db.VarChar(516)
+  Titel       String?   @db.VarChar(516)
+  Token       String?   @db.Text
+  OldPassword String?   @db.VarChar(516)
+  OtpID       String?   @db.VarChar(516)
+  Provider    String?   @db.VarChar(516) //enum providerNotification?
+  Remask      String?   @db.Text
+  Users       users?    @relation(fields: [UsersID], references: [ID])
+  UsersID     String?   @db.VarChar(516)
+  Status      String?   @db.VarChar(516) //enum forgotPasswordStatus
+  IsActive    Boolean   @default(true)
+  CreatedAt   DateTime  @default(now())
+  UpdatedAt   DateTime? @updatedAt()
+
+  @@index([UsersID])
+}
+
+model usersRoles {
+  ID         String    @id @unique @default(uuid()) @db.VarChar(516)
+  Titel      String?   @db.VarChar(516)
+  Type       String?   @db.VarChar(516) //enum rolesType?
+  Role       String    @db.VarChar(516)
+  Permission String    @db.VarChar(516)
+  Remask     String?   @db.Text
+  Users      users?    @relation(fields: [UsersID], references: [ID])
+  UsersID    String?   @db.VarChar(516)
+  Status     String?   @db.VarChar(516) //enum usersRolesStatus
+  IsActive   Boolean   @default(true)
+  CreatedAt  DateTime  @default(now())
+  UpdatedAt  DateTime? @updatedAt()
+
+  @@index([UsersID])
+}
+
+model usersActivities {
+  ID             String          @id @unique @default(uuid()) @db.VarChar(516)
+  Activity       String?         @db.Text
+  IP             String?         @db.Text
+  MacAddress     String?         @db.Text
+  UDID           String?         @db.Text
+  Remask         String?         @db.Text
+  Log            String?         @db.Text
+  Error          String?         @db.Text
+  Messages       String?         @db.Text
+  Users          users?          @relation(fields: [UsersID], references: [ID])
+  UsersID        String?         @db.VarChar(516)
+  ThreadingOrder orderThreading?
+  Status         String?         @db.VarChar(516) //enum usersActivitiesStatus
+  IsActive       Boolean         @default(true)
+  CreatedAt      DateTime        @default(now())
+  UpdatedAt      DateTime?       @updatedAt()
+
+  @@index([UsersID])
+}
+
+model orderType {
+  ID        String    @id @unique @default(uuid()) @db.VarChar(516)
+  TypeCode  String?   @db.VarChar(516)
+  TypeNmae  String?   @db.VarChar(516)
+  Remask    String?   @db.Text
+  Status    String?   @db.VarChar(516) //enum orderTypeStatus
+  IsActive  Boolean   @default(true)
+  CreatedAt DateTime  @default(now())
+  UpdatedAt DateTime? @updatedAt()
+}
+
+model orderCategory {
+  ID         String    @id @unique @default(uuid()) @db.VarChar(516)
+  TypeCode   String?   @db.VarChar(516)
+  TypeNmae   String?   @db.VarChar(516)
+  Remask     String?   @db.Text
+  Branches   branches? @relation(fields: [BranchesID], references: [ID])
+  BranchesID String?   @db.VarChar(516)
+  Order      order[]
+  Status     String?   @db.VarChar(516) //enum orderCategoryStatus
+  IsActive   Boolean   @default(true)
+  CreatedAt  DateTime  @default(now())
+  UpdatedAt  DateTime? @updatedAt()
+
+  @@index([BranchesID])
+}
+
+model order {
+  ID            String           @id @unique @default(uuid()) @db.VarChar(516)
+  Code          String?          @db.Text
+  PrimaryCode   String?          @db.Text
+  SecondaryCode String?          @db.Text
+  OrderDate     DateTime?
+  Name          String?          @db.VarChar(516)
+  UplaodURL     String?          @db.Text
+  Category      orderCategory?   @relation(fields: [CategoryID], references: [ID])
+  CategoryID    String?          @db.VarChar(516)
+  Personal      orderPersonal?
+  Details       orderDetails?
+  Payment       orderPayment?
+  Branches      branches?        @relation(fields: [BranchesID], references: [ID])
+  BranchesID    String?          @unique @db.VarChar(516)
+  CreateBy      users?           @relation(fields: [CreateByID], references: [ID])
+  CreateByID    String?          @unique @db.VarChar(516)
+  Remask        String?          @db.Text
+  Status        String?          @db.VarChar(516) //enum orderStatus
+  Tacking       orderTacking[]
+  Threading     orderThreading[]
+  IsActive      Boolean          @default(true)
+  CreatedAt     DateTime         @default(now())
+  UpdatedAt     DateTime?        @updatedAt()
+
+  @@index([BranchesID])
+  @@index([CategoryID])
+  @@index([CreateByID])
+}
+
+model orderThreading {
+  ID          String           @id @unique @default(uuid()) @db.VarChar(516)
+  Tasks       String?          @db.VarChar(516) //enum orderThreadingTasks
+  Activitie   usersActivities? @relation(fields: [ActivitieID], references: [ID])
+  ActivitieID String?          @unique @db.VarChar(516)
+  Order       order?           @relation(fields: [OrderID], references: [ID])
+  OrderID     String?          @db.VarChar(516)
+  Status      String?          @db.VarChar(516) //enum orderThreadingStatus
+  IsActive    Boolean          @default(true)
+  CreatedAt   DateTime         @default(now())
+  UpdatedAt   DateTime?        @updatedAt()
+
+  @@index([OrderID])
+  @@index([ActivitieID])
+}
+
+model orderPersonal {
+  ID                   String    @id @unique @default(uuid()) @db.VarChar(516)
+  SenderName           String?   @db.VarChar(516)
+  SenderPhoneNumber    String?   @db.VarChar(516)
+  SenderUser           users?    @relation("Sender", fields: [SenderUserID], references: [ID])
+  SenderUserID         String?   @unique @db.VarChar(516)
+  RecipientName        String?   @db.VarChar(516)
+  RecipientPhoneNumber String?   @db.VarChar(516)
+  RecipientUser        users?    @relation("Recipient", fields: [RecipientID], references: [ID])
+  RecipientID          String?   @unique @db.VarChar(516)
+  Order                order?    @relation(fields: [OrderID], references: [ID])
+  OrderID              String?   @unique @db.VarChar(516)
+  Status               String?   @db.VarChar(516) //enum orderPersonalStatus
+  IsActive             Boolean   @default(true)
+  CreatedAt            DateTime  @default(now())
+  UpdatedAt            DateTime? @updatedAt()
+
+  @@index([OrderID])
+  @@index([SenderUserID])
+  @@index([RecipientID])
+}
+
+model orderPayment {
+  ID            String       @id @unique @default(uuid()) @db.VarChar(516)
+  PaymentStatus String?      @db.VarChar(516) //enum orderPaymentStatus
+  AmountDeliver Float?       @db.Double()
+  IsPaid        Boolean      @default(false)
+  Order         order?       @relation(fields: [OrderID], references: [ID])
+  OrderID       String?      @unique @db.VarChar(516)
+  PaidTo        users?       @relation("RecipientPayment", fields: [PaidToID], references: [ID])
+  PaidToID      String?      @db.VarChar(516)
+  Status        String?      @db.VarChar(516) //enum orderPaymentStatus
+  Transaction   transaction?
+  IsActive      Boolean      @default(true)
+  CreatedAt     DateTime     @default(now())
+  UpdatedAt     DateTime?    @updatedAt()
+
+  @@index([OrderID])
+  @@index([PaidToID])
+}
+
+model orderDetails {
+  ID        String    @id @unique @default(uuid()) @db.VarChar(516)
+  Detail    String?   @db.Text
+  AmountX   Float?    @db.Double()
+  AmountY   Float?    @db.Double()
+  AmountH   Float?    @db.Double()
+  AmountW   Float?    @db.Double()
+  Amount    Float?    @db.Double()
+  Order     order?    @relation(fields: [OrderID], references: [ID])
+  OrderID   String?   @unique @db.VarChar(516)
+  Status    String?   @db.VarChar(516) //enum orderDetailsStatus
+  IsActive  Boolean   @default(true)
+  CreatedAt DateTime  @default(now())
+  UpdatedAt DateTime? @updatedAt()
+
+  @@index([OrderID])
+}
+
+model tackingStatus {
+  ID          String         @id @unique @default(uuid()) @db.VarChar(516)
+  Status      String?        @db.VarChar(516) //enum tackingStatus
+  Description String?        @db.Text
+  Tracking    orderTacking[]
+  IsActive    Boolean        @default(true)
+  CreatedAt   DateTime       @default(now())
+  UpdatedAt   DateTime?      @updatedAt()
+}
+
+model orderTacking {
+  ID                   String         @id @unique @default(uuid()) @db.VarChar(516)
+  Number               String?        @db.Text
+  PrimaryPhoneNumber   String?        @db.VarChar(516)
+  SecondaryName        String?        @db.VarChar(516)
+  SecondaryPhoneNumber String?        @db.VarChar(516)
+  Order                order?         @relation(fields: [OrderID], references: [ID])
+  OrderID              String?        @db.VarChar(516)
+  Branches             branches?      @relation(fields: [BranchesID], references: [ID])
+  BranchesID           String?        @unique @db.VarChar(516)
+  TrackingStatus       tackingStatus? @relation(fields: [TrackingStatusID], references: [ID])
+  TrackingStatusID     String?        @unique @db.VarChar(516)
+  Status               String?        @db.VarChar(516) //enum orderTackingStatus
+  IsActive             Boolean        @default(true)
+  CreatedAt            DateTime       @default(now())
+  UpdatedAt            DateTime?      @updatedAt()
+
+  @@index([OrderID])
+  @@index([TrackingStatusID])
+  @@index([BranchesID])
+}
