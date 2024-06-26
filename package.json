@@ -1,5 +1,5 @@
 {
-  "name": "idea-model",
+  "name": "prisma-client-cefcedb846230082ab6d41dc631b738eb3c3ab5f182fe2031f990635ec7a325d",
   "main": "index.js",
   "types": "index.d.ts",
   "browser": "index-browser.js",
@@ -79,6 +79,6 @@
     },
     "./*": "./*"
   },
-  "version": "5.14.0",
+  "version": "5.16.0",
   "sideEffects": false
 }

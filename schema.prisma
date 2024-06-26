@@ -213,25 +213,28 @@ model users {
 }
 
 model profile {
-  ID         String    @id @unique @default(uuid()) @db.VarChar(516)
-  Gender     String?   @db.VarChar(516) //enum gender?
-  Name       String    @db.VarChar(516)
-  SurName    String    @db.VarChar(516)
-  ProfileURL String?   @db.Text
-  User       users?    @relation("UserID", fields: [UserID], references: [ID])
-  UserID     String?   @unique @db.VarChar(516)
-  Admin      users?    @relation("AdminID", fields: [AdminID], references: [ID])
-  AdminID    String?   @db.VarChar(516)
-  AdminPin   String?   @db.VarChar(516)
-  Remask     String?   @db.Text
-  Status     String?   @db.VarChar(516) //enum profileStatus @default(Active)
-  IsActive   Boolean   @default(true)
-  CreatedAt  DateTime  @default(now())
-  UpdatedAt  DateTime? @updatedAt()
+  ID         String      @id @unique @default(uuid()) @db.VarChar(516)
+  Gender     String?     @db.VarChar(516) //enum gender?
+  Name       String      @db.VarChar(516)
+  SurName    String      @db.VarChar(516)
+  ProfileURL String?     @db.Text
+  User       users?      @relation("UserID", fields: [UserID], references: [ID])
+  UserID     String?     @unique @db.VarChar(516)
+  Admin      users?      @relation("AdminID", fields: [AdminID], references: [ID])
+  AdminID    String?     @db.VarChar(516)
+  Role       usersRoles? @relation("RoleID", fields: [RoleID], references: [ID])
+  RoleID     String?     @unique @db.VarChar(516)
+  AdminPin   String?     @db.VarChar(516)
+  Remask     String?     @db.Text
+  Status     String?     @db.VarChar(516) //enum profileStatus @default(Active)
+  IsActive   Boolean     @default(true)
+  CreatedAt  DateTime    @default(now())
+  UpdatedAt  DateTime?   @updatedAt()
   Address    address[]
 
   @@index([AdminID])
   @@index([UserID])
+  @@index([RoleID])
 }
 
 model otp {
@@ -307,6 +310,7 @@ model usersRoles {
   IsActive   Boolean   @default(true)
   CreatedAt  DateTime  @default(now())
   UpdatedAt  DateTime? @updatedAt()
+  Profile    profile?  @relation("RoleID")
 
   @@index([UsersID])
 }

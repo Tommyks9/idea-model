@@ -16,12 +16,12 @@ exports.Prisma = Prisma
 exports.$Enums = {}
 
 /**
- * Prisma Client JS version: 5.14.0
- * Query Engine version: e9771e62de70f79a5e1c604a2d7c8e2a0a874b48
+ * Prisma Client JS version: 5.16.0
+ * Query Engine version: 34ace0eb2704183d2c05b60b52fba5c43c13f303
  */
 Prisma.prismaVersion = {
-  client: "5.14.0",
-  engine: "e9771e62de70f79a5e1c604a2d7c8e2a0a874b48"
+  client: "5.16.0",
+  engine: "34ace0eb2704183d2c05b60b52fba5c43c13f303"
 }
 
 Prisma.PrismaClientKnownRequestError = () => {
@@ -264,6 +264,7 @@ exports.Prisma.ProfileScalarFieldEnum = {
   ProfileURL: 'ProfileURL',
   UserID: 'UserID',
   AdminID: 'AdminID',
+  RoleID: 'RoleID',
   AdminPin: 'AdminPin',
   Remask: 'Remask',
   Status: 'Status',
